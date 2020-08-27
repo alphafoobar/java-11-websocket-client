@@ -14,11 +14,11 @@ public class WebSocketClient implements WebSocket.Listener {
     private List<CharSequence> parts = new ArrayList<>();
     private CompletableFuture<?> accumulatedMessage = new CompletableFuture<>();
 
-    private final Consumer<String> onNext;
+    private final BiConsumer<WebSocket, String> onNext;
     private final Consumer<Throwable> onError;
     private final BiConsumer<Integer, String> onClose;
 
-    public WebSocketClient(Consumer<String> onNext, Consumer<Throwable> onError, BiConsumer<Integer, String> onClose) {
+    public WebSocketClient(BiConsumer<WebSocket, String> onNext, Consumer<Throwable> onError, BiConsumer<Integer, String> onClose) {
         this.onNext = onNext;
         this.onError = onError;
         this.onClose = onClose;
@@ -35,7 +35,7 @@ public class WebSocketClient implements WebSocket.Listener {
         parts.add(message);
         webSocket.request(1);
         if (last) {
-            processWholeText(parts);
+            processWholeText(webSocket, parts);
             parts = new ArrayList<>();
             accumulatedMessage.complete(null);
             CompletionStage<?> cf = accumulatedMessage;
@@ -45,12 +45,12 @@ public class WebSocketClient implements WebSocket.Listener {
         return accumulatedMessage;
     }
 
-    private void processWholeText(List<CharSequence> parts) {
+    private void processWholeText(WebSocket webSocket, List<CharSequence> parts) {
         StringBuilder sb = new StringBuilder();
         for (CharSequence part : parts) {
             sb.append(part);
         }
-        onNext.accept(sb.toString());
+        onNext.accept(webSocket, sb.toString());
     }
 
     @Override

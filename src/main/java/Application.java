@@ -49,8 +49,13 @@ public class Application {
         return true;
     }
 
-    private static void onNext(String message) {
-        System.out.println("text received " + message);
+    private static void onNext(WebSocket ws, String message) {
+        if (message.contains("Please re-connect")) {
+            System.out.println("text received " + message);
+            if (connect()) {
+                ws.sendClose(WebSocket.NORMAL_CLOSURE, "Reconnect request received");
+            }
+        }
     }
 
     private static void onError(Throwable error) {
@@ -60,6 +65,12 @@ public class Application {
     private static void onClose(Integer status, String reason) {
         System.out.println("Close status=" + status + ", reason=" + reason);
 
+        if (status == 1000 && "Reconnect request received".equals(reason)) {
+            System.out.println("Already handling shutdown, status=" + status + ", reason=" + reason);
+            return;
+        }
+
+        System.out.println("Running reconnection for onClose, status=" + status + ", reason=" + reason);
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
