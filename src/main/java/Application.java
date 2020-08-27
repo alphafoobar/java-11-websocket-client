@@ -3,6 +3,8 @@ import ws.WebSocketClient;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -19,6 +21,7 @@ public class Application {
         System.out.println("Connecting... ");
         WebSocket ws = HttpClient.newHttpClient()
                 .newWebSocketBuilder()
+                .connectTimeout(Duration.of(5, ChronoUnit.SECONDS))
                 .buildAsync(
                         URI.create("ws://localhost:8099/"),
                         new WebSocketClient(Application::onNext, Application::onError, Application::onClose))
